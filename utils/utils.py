@@ -1,6 +1,12 @@
 import numpy as np, pandas as pd, pickle
 from sklearn.metrics import roc_auc_score
 
+import pandas as pd, numpy as np, os, tensorflow as tf
+
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import roc_curve, auc
+from matplotlib import pyplot as plt
+
 randomSeed = 88
 
 def get_minibatches_idx(n, batch_size, shuffle=False):
@@ -179,3 +185,169 @@ def ndcg_score(y_true, y_score, k=10, gains="exponential"):
     best = dcg_score(y_true, y_true, k, gains)
     actual = dcg_score(y_true, y_score, k, gains)
     return actual / best
+
+def single_user_ndcg(label, score, label_thres=4, k=10):
+    """single user ndcg score"""
+    nnz = label.nonzero()[0]
+    # if np.sum(label >= label_thres) < k: return None
+    label, score = label[nnz], score[nnz]
+    label = (label >= label_thres).astype(int)
+    return ndcg_score(label, score, k)
+
+def all_user_ndcg(label_mat, pred_mat, cond_fn, label_thres=4, k=10):
+    """avg of all user ndcg score"""
+    tot_ndcg, actual_cnt = 0, 0
+    for i, (label, score) in enumerate(zip(label_mat, pred_mat)):
+        if not cond_fn(label): continue
+
+        ndcg = single_user_ndcg(label, score, k=10)
+        if ndcg is not None:
+            tot_ndcg += ndcg
+            actual_cnt += 1
+    return tot_ndcg / actual_cnt
+
+
+datapath = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/data'
+
+def prepare():
+    ratings = pd.read_csv("{}/ml-latest-small/ratings.csv".format(datapath))
+    movies = pd.read_csv("{}/ml-latest-small/movies.csv".format(datapath))
+
+    uidEnc, midEnc = LabelEncoder(), LabelEncoder()
+    # encode user id and movie id to real value
+    midEnc.fit(movies.movieId)
+    uidEnc.fit(ratings.userId)
+
+    ratings["userId"] = uidEnc.transform(ratings.userId)
+    ratings["movieId"] = midEnc.transform(ratings.movieId)
+
+    movies["movieId"] = midEnc.transform(movies.movieId)
+
+    midMap = pd.Series(dict(zip(movies.movieId, movies.title)))
+
+    nUsers, nMovies = len(uidEnc.classes_), len(midEnc.classes_)
+
+    tr = pd.read_csv("./data/ml-latest-small/movielens.tr.csv")
+    te = pd.read_csv("./data/ml-latest-small/movielens.te.csv")
+
+    # train data rating matrix
+    trRatingMat = np.zeros((nUsers, nMovies))
+    # test data rating matrix
+    teRatingMat = np.zeros((nUsers, nMovies))
+    for idx, r in tr.iterrows():
+        trRatingMat[int(r.userId), int(r.movieId)] = r.rating
+    for idx, r in te.iterrows():
+        teRatingMat[int(r.userId), int(r.movieId)] = r.rating
+
+    return (ratings, movies, uidEnc, midEnc, nUsers,
+            nMovies, midMap, tr, te, trRatingMat, teRatingMat)
+
+
+def loo_preprocess(data, movie_trans, train_hist=None, is_train=True):
+    """以leave one out方式產生 train data, test data"""
+    queue = []
+    data = data.merge(movie_trans, how="left", on="movieId")
+    columns=["user_id", "query_movie_ids",
+             "genres", "avg_rating", "year", "candidate_movie_id",
+             "rating"]
+    for u, df in data.groupby("userId"):
+        df = df.sort_values("rating", ascending=False)
+        if not is_train:
+            user_movies_hist = train_hist.query("userId == {}".format(u)).movieId
+        for i, (_, r) in enumerate(df.iterrows()):
+            if is_train:
+                queue.append([int(r.userId), df.movieId[:i].tolist() + df.movieId[i + 1:].tolist(), r.genres, r.avg_rating, r.year, int(r.movieId), r.rating])
+            else:
+                # queue.append([int(r.userId), df.movieId[:i].tolist() + df.movieId[i + 1:].tolist(), r.genres, r.avg_rating, r.year, int(r.movieId), r.rating])
+                # all_hist = set(user_movies_hist.tolist() + df.movieId[:i].tolist())
+                all_hist = set(user_movies_hist.tolist())
+                queue.append([int(r.userId), list(all_hist - set([int(r.movieId)])), r.genres, r.avg_rating, r.year, int(r.movieId), r.rating])
+    return pd.DataFrame(queue, columns=columns)
+
+def do_multi(df, multi_cols):
+    """對於multivalent的欄位, 需要增加一個column去描述該欄位的長度"""
+    pad = tf.keras.preprocessing.sequence.pad_sequences
+    ret = OrderedDict()
+    for colname, col in df.iteritems():
+        if colname in multi_cols:
+            lens = col.map(len)
+            ret[colname] = list(pad(col, padding="post", maxlen=lens.max()))
+            ret[colname + "_len"] = lens.values
+        else:
+            ret[colname] = col.values
+    return ret
+
+
+def user_data(data, uids, n_batch=128):
+    u_col = ["user_id", "query_movie_ids", "candidate_movie_id"]
+    cache = {"u_ary": []}
+
+    def clear(u_ary):
+        u_data = do_multi(pd.DataFrame(data=u_ary, columns=u_col), ["query_movie_ids"])
+        cache["u_ary"] = []
+        return u_data
+
+    for uid, df in data[data.user_id.isin(uids)].groupby("user_id"):
+        u_rec, u_ary = df.iloc[0], cache["u_ary"]
+        # print(u_rec.query_movie_ids, u_rec.candidate_movie_id)
+        u_rec.set_value("query_movie_ids", u_rec.query_movie_ids + [u_rec.candidate_movie_id])
+        u_ary.append(u_rec[u_col].values)
+        if len(u_ary) >= n_batch:
+            yield clear(u_ary)
+    yield clear(u_ary)
+
+
+def user_item_data(data, uids, movie_trans, n_batch=128):
+    u_col = ["user_id", "query_movie_ids"]
+    cache = {"u_ary": []}
+    items = do_multi(movie_trans, ["genres"])
+    items["candidate_movie_id"] = items.pop("movieId")
+
+    def clear(u_ary):
+        u_data = do_multi(pd.DataFrame(data=u_ary, columns=u_col), ["query_movie_ids"])
+        cache["u_ary"] = []
+        return u_data
+
+    for uid, df in data[data.user_id.isin(uids)].groupby("user_id"):
+        u_rec, u_ary = df.iloc[0], cache["u_ary"]
+        # print(u_rec.query_movie_ids, u_rec.candidate_movie_id)
+        u_rec.set_value("query_movie_ids", u_rec.query_movie_ids + [u_rec.candidate_movie_id])
+        u_ary.append(u_rec[u_col].values)
+        if len(u_ary) >= n_batch:
+            yield clear(u_ary), items
+    yield clear(u_ary), items
+
+
+def drawRocCurve(y, predProba):
+    fprRf, tprRf, _ = roc_curve(y, predProba, pos_label=1)
+    aucScr = auc(fprRf, tprRf)
+    print("auc:", aucScr)
+    f, ax = plt.subplots(1, 1, figsize=(6, 6))
+
+    ax.plot([0, 1], [0, 1], 'k--')
+    ax.plot(fprRf, tprRf, label='ROC CURVE')
+    ax.set_xlabel('False positive rate')
+    ax.set_ylabel('True positive rate')
+    ax.set_title('ROC: Area Under Curve (score: {:.4f})'.format(aucScr))
+    ax.legend(loc='best')
+    plt.show()
+
+
+def strict_condition(label):
+    label = label[label != 0]
+    pos, neg = sum(label >= 4), sum(label < 4)
+    return len(label) >= 10 and pos <= neg and pos > 0
+
+def norm_condition(label):
+    label = label[label != 0]
+    return sum(label >= 4) > 0 and sum(label < 4) > 0
+
+def precision_at_k(truth, pred_mat, condition_fn=None, k=10, label_thres=4):
+    hits, total = 0, 0
+    for label, pr in zip(truth, pred_mat):
+        if not condition_fn(label): continue
+
+        top_k_ind = (pr * (label != 0)).argsort()[::-1][:k]
+        hits += sum(label[top_k_ind] >= label_thres)
+        total += k
+    return hits / total
