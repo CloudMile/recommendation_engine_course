@@ -5,7 +5,7 @@
 
 ## Datalab: 選擇python 3 kernel
 進入datalab之後選擇kernel = python3, 如下圖
-![Alt text](./CMD.jpg)
+![Alt text](./kernel.jpg)
 
 ### Python Version: 3.5
 會使用到的 Python 函式庫有：
