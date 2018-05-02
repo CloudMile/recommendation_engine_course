@@ -328,7 +328,7 @@ def drawRocCurve(y, predProba):
     ax.plot(fprRf, tprRf, label='ROC CURVE')
     ax.set_xlabel('False positive rate')
     ax.set_ylabel('True positive rate')
-    ax.set_title('ROC: Area Under Curve (score: {:.4f})'.format(aucScr))
+    ax.set_title('Area Under Curve(ROC) (score: {:.4f})'.format(aucScr))
     ax.legend(loc='best')
     plt.show()
 
