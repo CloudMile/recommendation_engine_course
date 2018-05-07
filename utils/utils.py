@@ -256,12 +256,16 @@ def loo_preprocess(data, movie_trans, train_hist=None, is_train=True):
             user_movies_hist = train_hist.query("userId == {}".format(u)).movieId
         for i, (_, r) in enumerate(df.iterrows()):
             if is_train:
-                queue.append([int(r.userId), df.movieId[:i].tolist() + df.movieId[i + 1:].tolist(), r.genres, r.avg_rating, r.year, int(r.movieId), r.rating])
+                queue.append([int(r.userId),
+                              df.movieId[:i].tolist() + df.movieId[i + 1:].tolist(),
+                              r.genres, r.avg_rating, r.year, int(r.movieId), r.rating])
             else:
                 # queue.append([int(r.userId), df.movieId[:i].tolist() + df.movieId[i + 1:].tolist(), r.genres, r.avg_rating, r.year, int(r.movieId), r.rating])
                 # all_hist = set(user_movies_hist.tolist() + df.movieId[:i].tolist())
                 all_hist = set(user_movies_hist.tolist())
-                queue.append([int(r.userId), list(all_hist - set([int(r.movieId)])), r.genres, r.avg_rating, r.year, int(r.movieId), r.rating])
+                queue.append([int(r.userId),
+                              list(all_hist - set([int(r.movieId)])),
+                              r.genres, r.avg_rating, r.year, int(r.movieId), r.rating])
     return pd.DataFrame(queue, columns=columns)
 
 def do_multi(df, multi_cols):
