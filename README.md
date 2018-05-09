@@ -18,7 +18,7 @@
 <br/>
 <br/>
 
-## 本機使用安裝簡易教學
+## 本機使用安裝簡易教學 (Optional)
 
 ### 使用Anaconda
 #### Step1 下載Anaconda
