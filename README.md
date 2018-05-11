@@ -1,7 +1,7 @@
 # T客邦Recommendation Course
 
 ## 簡介
-預設使用GCP Goole Cloud Platform Datalab環境, 本機無須安裝任何套件, Datalab set up請參考 [GCP Datalab set up](https://docs.google.com/presentation/d/1ycHlObI_YyydrEiECdag_V_n1sXd8StQqrqdrBSoPI8/edit#slide=id.g2b481b6fdb_0_282)
+預設使用GCP Goole Cloud Platform Datalab環境, 本機無須安裝任何套件, Datalab set up請參考 [GCP Datalab set up](https://docs.google.com/presentation/d/1MQA-zgSV84wKAaBhcG-eIDcWuidOoWiCmIOivNMOoF8/edit#slide=id.g3955b94f6d_1_123)
 
 ## Datalab: 選擇python 3 kernel
 進入datalab之後選擇kernel = python3, 如下圖
@@ -18,7 +18,7 @@
 <br/>
 <br/>
 
-## 本機使用安裝簡易教學
+## 本機使用安裝簡易教學 (Optional)
 
 ### 使用Anaconda
 #### Step1 下載Anaconda
