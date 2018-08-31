@@ -11,7 +11,7 @@
 3. 點選連結更多應用程式
   ![colab.3](./colab.3.jpg)
 4. 搜尋colab即可找到該應用程式, 開啟後直接可以在google drive上面看到.ipynb檔, 即可線上開發
-  ![colab.3](./colab.3.jpg)
+  ![colab.4](./colab.4.jpg)
   
   詳細請參考[Cloud Colab](./cloud_colab.pdf)
 
