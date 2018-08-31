@@ -6,11 +6,11 @@
 ## 開啟Colab
 1. Gmail右上角選單進入google drive <br/>
   ![colab.1](./colab.1.jpg)
-2. 點選左上角新增
+2. 點選左上角新增 <br/>
   ![colab.2](./colab.2.jpg)
-3. 點選連結更多應用程式
+3. 點選連結更多應用程式 <br/>
   ![colab.3](./colab.3.jpg)
-4. 搜尋colab即可找到該應用程式, 開啟後直接可以在google drive上面看到.ipynb檔, 即可線上開發
+4. 搜尋colab即可找到該應用程式, 開啟後直接可以在google drive上面看到.ipynb檔, 即可線上開發 <br/>
   ![colab.4](./colab.4.jpg)
   
   詳細請參考[Cloud Colab](./cloud_colab.pdf)
