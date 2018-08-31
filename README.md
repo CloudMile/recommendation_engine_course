@@ -4,7 +4,7 @@
 預設使用Google co-laboratory: 線上jupyter notebook開發環境, 本機無須安裝任何套件, 至少需要有Gmail帳號
 
 ## 開啟Colab
-1. Gmail右上角選單進入google drive
+1. Gmail右上角選單進入google drive <br/>
   ![colab.1](./colab.1.jpg)
 
 ### Python Version: 3.5
