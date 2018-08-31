@@ -1,11 +1,11 @@
 # T客邦Recommendation Course
 
 ## 簡介
-預設使用GCP Goole Cloud Platform Datalab環境, 本機無須安裝任何套件, Datalab set up請參考 [GCP Datalab set up](https://docs.google.com/presentation/d/e/2PACX-1vSJGBzrQ835pa8lP1Pyy9R_0YdHvTA1MV8Y-0_pnkYPjaK5DVMFiKuS0kyef_KS4moFTVYOd6yOtmYv/pub?start=false&loop=false&delayms=3000)
+預設使用Google co-laboratory: 線上jupyter notebook開發環境, 本機無須安裝任何套件, 至少需要有Gmail帳號
 
-## Datalab: 選擇python 3 kernel
-進入datalab之後選擇kernel = python3, 如下圖
-![Alt text](./kernel.jpg)
+## 開啟Colab
+1. Gmail右上角選單進入google drive
+![colab.1](./colab.1.jpg)
 
 ### Python Version: 3.5
 會使用到的 Python 函式庫有：
