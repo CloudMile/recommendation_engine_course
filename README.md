@@ -5,7 +5,7 @@
 
 ## 開啟Colab
 1. Gmail右上角選單進入google drive
-![colab.1](./colab.1.jpg)
+  ![colab.1](./colab.1.jpg)
 
 ### Python Version: 3.5
 會使用到的 Python 函式庫有：
