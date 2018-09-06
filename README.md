@@ -13,7 +13,7 @@
 4. 搜尋colab即可找到該應用程式, 開啟後直接可以在google drive上面看到.ipynb檔, 即可線上開發 <br/>
   ![colab.4](./colab.4.jpg)
   
-  詳細請參考[Cloud Colab](./cloud_colab.pdf)
+  詳細請參考[Cloud Colab](Cloud_Colab.pdf)
 
 ### Python Version: 3.5
 會使用到的 Python 函式庫有：
