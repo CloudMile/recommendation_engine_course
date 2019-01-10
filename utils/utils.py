@@ -226,9 +226,8 @@ def prepare():
     midMap = pd.Series(dict(zip(movies.movieId, movies.title)))
 
     nUsers, nMovies = len(uidEnc.classes_), len(midEnc.classes_)
-
-    tr = pd.read_csv("./data/ml-latest-small/movielens.tr.csv")
-    te = pd.read_csv("./data/ml-latest-small/movielens.te.csv")
+    tr = pd.read_csv("{}/ml-latest-small/movielens.tr.csv".format(datapath))
+    te = pd.read_csv("{}/ml-latest-small/movielens.te.csv".format(datapath))
 
     # train data rating matrix
     trRatingMat = np.zeros((nUsers, nMovies))
